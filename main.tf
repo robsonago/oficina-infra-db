@@ -11,6 +11,7 @@ resource "google_sql_database_instance" "oficina" {
 
   settings {
     tier              = var.tier
+    edition           = "ENTERPRISE"
     availability_type = "ZONAL"
     disk_autoresize   = true
 
