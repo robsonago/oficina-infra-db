@@ -114,3 +114,15 @@ resource "google_secret_manager_secret_iam_member" "app_reads_password" {
   role      = "roles/secretmanager.secretAccessor"
   member    = "serviceAccount:${google_service_account.app_cloudsql.email}"
 }
+
+# oficina-jwt-secret é criado manualmente (fora deste Terraform, ver runbook) e
+# sobrevive a um terraform destroy — mas a service account abaixo não: ela é
+# recriada do zero a cada apply, então essa concessão de acesso precisa estar
+# aqui, e não só ter sido dada uma vez via `gcloud` manualmente (senão some na
+# próxima recriação e quebra o deploy de oficina-auth-function, que lê esse
+# secret para emitir um JWT compatível com o da aplicação principal).
+resource "google_secret_manager_secret_iam_member" "app_reads_jwt_secret" {
+  secret_id = "oficina-jwt-secret"
+  role      = "roles/secretmanager.secretAccessor"
+  member    = "serviceAccount:${google_service_account.app_cloudsql.email}"
+}
