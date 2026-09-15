@@ -115,14 +115,28 @@ resource "google_secret_manager_secret_iam_member" "app_reads_password" {
   member    = "serviceAccount:${google_service_account.app_cloudsql.email}"
 }
 
-# oficina-jwt-secret é criado manualmente (fora deste Terraform, ver runbook) e
-# sobrevive a um terraform destroy — mas a service account abaixo não: ela é
-# recriada do zero a cada apply, então essa concessão de acesso precisa estar
-# aqui, e não só ter sido dada uma vez via `gcloud` manualmente (senão some na
-# próxima recriação e quebra o deploy de oficina-auth-function, que lê esse
-# secret para emitir um JWT compatível com o da aplicação principal).
+# oficina-jwt-secret, oficina-mail-username e oficina-mail-password são
+# criados manualmente (fora deste Terraform, ver runbook) e sobrevivem a um
+# terraform destroy — mas a service account abaixo não: ela é recriada do
+# zero a cada apply, então essa concessão de acesso precisa estar aqui, e não
+# só ter sido dada uma vez via `gcloud` manualmente (senão some na próxima
+# recriação e quebra o deploy de oficina-auth-function: a function de auth lê
+# o JWT secret pra emitir um token compatível com o da aplicação principal, e
+# a de notificação lê as credenciais de e-mail pra mandar via SMTP).
 resource "google_secret_manager_secret_iam_member" "app_reads_jwt_secret" {
   secret_id = "oficina-jwt-secret"
+  role      = "roles/secretmanager.secretAccessor"
+  member    = "serviceAccount:${google_service_account.app_cloudsql.email}"
+}
+
+resource "google_secret_manager_secret_iam_member" "app_reads_mail_username" {
+  secret_id = "oficina-mail-username"
+  role      = "roles/secretmanager.secretAccessor"
+  member    = "serviceAccount:${google_service_account.app_cloudsql.email}"
+}
+
+resource "google_secret_manager_secret_iam_member" "app_reads_mail_password" {
+  secret_id = "oficina-mail-password"
   role      = "roles/secretmanager.secretAccessor"
   member    = "serviceAccount:${google_service_account.app_cloudsql.email}"
 }
