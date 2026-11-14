@@ -9,6 +9,21 @@ principal ([`oficina`](https://github.com/robsonago/oficina)), com bancos
 separados para homologação (`oficina_homolog`) e produção (`oficina_producao`)
 dentro da mesma instância.
 
+**Fase 4:** a mesma instância passa a hospedar também o banco do
+[Execution Service](https://github.com/robsonago/oficina-execution-service)
+(`execucao_homolog` / `execucao_producao`), com **usuário, senha (secret
+`oficina-execucao-db-password`) e service account (`oficina-execucao`)
+próprios** — o Execution Service não conhece as credenciais do banco do OS
+Service e vice-versa. O Billing Service usa MongoDB, provisionado dentro do
+cluster (ver [`oficina-infra-k8s`](https://github.com/robsonago/oficina-infra-k8s)).
+Manter tudo na mesma instância é uma escolha de custo para o ambiente de
+estudo; numa operação real o passo seguinte seria uma instância por serviço.
+
+| Database | Usuário | Serviço |
+|---|---|---|
+| `oficina_homolog` / `oficina_producao` | `oficina` | OS Service |
+| `execucao_homolog` / `execucao_producao` | `execucao` | Execution Service |
+
 Dockerfile não se aplica a este repositório (Terraform não usa Docker).
 
 ## Stack

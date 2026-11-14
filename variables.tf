@@ -38,3 +38,9 @@ variable "deletion_protection" {
   type        = bool
   default     = false
 }
+
+variable "execucao_db_user" {
+  description = "Usuário do banco do Execution Service (separado do usuário do OS Service)"
+  type        = string
+  default     = "execucao"
+}
