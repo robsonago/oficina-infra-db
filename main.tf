@@ -126,3 +126,55 @@ resource "google_secret_manager_secret_iam_member" "app_reads_jwt_secret" {
   role      = "roles/secretmanager.secretAccessor"
   member    = "serviceAccount:${google_service_account.app_cloudsql.email}"
 }
+
+# ──────────────────────────────────────────
+# Fase 4 — banco do Execution Service
+# Database e usuário próprios na mesma instância (custo), com senha e
+# service account separadas: o Execution Service não conhece as credenciais
+# do banco do OS Service e vice-versa. O Billing usa MongoDB (NoSQL), que
+# roda dentro do cluster — ver oficina-infra-k8s.
+# ──────────────────────────────────────────
+resource "google_sql_database" "execucao_homolog" {
+  name     = "execucao_homolog"
+  instance = google_sql_database_instance.oficina.name
+}
+
+resource "google_sql_database" "execucao_producao" {
+  name     = "execucao_producao"
+  instance = google_sql_database_instance.oficina.name
+}
+
+resource "random_password" "execucao_db_password" {
+  length  = 24
+  special = false
+}
+
+resource "google_sql_user" "execucao" {
+  name     = var.execucao_db_user
+  instance = google_sql_database_instance.oficina.name
+  password = random_password.execucao_db_password.result
+}
+
+resource "google_secret_manager_secret" "execucao_db_password" {
+  secret_id = "oficina-execucao-db-password"
+
+  replication {
+    auto {}
+  }
+}
+
+resource "google_secret_manager_secret_version" "execucao_db_password" {
+  secret      = google_secret_manager_secret.execucao_db_password.id
+  secret_data = random_password.execucao_db_password.result
+}
+
+resource "google_service_account" "execucao" {
+  account_id   = "oficina-execucao"
+  display_name = "Execution Service - Cloud SQL (Auth Proxy) e Pub/Sub"
+}
+
+resource "google_project_iam_member" "execucao_cloudsql_client" {
+  project = var.project_id
+  role    = "roles/cloudsql.client"
+  member  = "serviceAccount:${google_service_account.execucao.email}"
+}

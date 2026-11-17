@@ -28,3 +28,12 @@ output "app_service_account_email" {
 output "secret_db_password_id" {
   value = google_secret_manager_secret.db_password.secret_id
 }
+
+output "execucao_db_names" {
+  value = [google_sql_database.execucao_homolog.name, google_sql_database.execucao_producao.name]
+}
+
+output "execucao_service_account_email" {
+  description = "Service account do Execution Service (usar em oficina-infra-k8s, variável execucao_service_account_email)"
+  value       = google_service_account.execucao.email
+}
